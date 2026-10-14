@@ -1,0 +1,12 @@
+{
+  "name": "dsh-coding-preset",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Custom DSH agent preset: coding mode (standard minus goals, workflows, and subagent control; one-shot subagents)",
+  "type": "module",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}
