@@ -1,21 +1,20 @@
 # The coding-mode bundle layer: one `@deepseek-ai/dsh-agent-preset` declaration.
 # It publishes a `name`, so the preset roster lists it under Custom rather than
 # under the shipped presets. Kept in step with the shipped `standard` preset
-# minus the goal command and tools, the workflow engine and tool, and the
-# subagent control tools.
+# minus the goal command and tools and the workflow engine and tool. Subagent
+# control tools are kept, with `interrupt` enabled where `standard` disables it.
 #
 # The plugin-owned prompt text adapts by construction: `tool-goal`,
-# `tool-workflow`, `tool-subagent-control`, and `tool-subagent-control/list-agents`
-# own every prompt section and tool description naming their tools, so none of
-# them is declared here and no model-visible text refers to a capability this
-# preset lacks.
+# `tool-workflow`, and `command-goal` own every prompt section and tool
+# description naming their tools, so none of them is declared here and no
+# model-visible text refers to a capability this preset lacks.
 - insert:
     - id: preset-coding
       name: '@deepseek-ai/dsh-agent-preset'
       config:
         id: coding
         name: 编码模式
-        description: 面向编码任务的标准能力：文件、搜索、shell、Skills、计划、提醒与上下文压缩；不含目标、工作流和子 Agent 控制工具。
+        description: 面向编码任务的标准能力：文件、搜索、shell、Skills、计划、提醒与上下文压缩；不含目标与工作流，保留子 Agent 委派及其消息、打断、发现工具。
         order: 5
         plugins:
           - id: persona
@@ -117,6 +116,16 @@
             name: cordis:group
             group: true
             config:
+              - id: tool-subagent-control
+                name: '@deepseek-ai/dsh-tool-subagent-control'
+                config:
+                  # Enabled, unlike the shipped `standard` preset, which passes
+                  # `interrupt: false`. Coding work is where a delegated task most
+                  # often needs steering mid-run, and `send_message` is the tool
+                  # the `subagent` description already advertises; leaving the
+                  # control tools out makes that description name a tool this
+                  # preset does not have.
+                  interrupt: true
               - id: tool-subagent
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
