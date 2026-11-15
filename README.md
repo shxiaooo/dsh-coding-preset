@@ -34,9 +34,29 @@ pnpm dsh plugin --profile web add link:~/dsh-coding-preset
 
 ## 说明
 
-- **子 Agent 保留为一次性委派**（`subagent` / `subagent_fork`），但过滤掉了 schedule 系列工具，
-  子 Agent 无法自行创建定时任务。
+- **子 Agent 保留为一次性委派**（`subagent` / `subagent_fork`）。子 Agent 继承父 Agent 的预设，
+  因此也拥有 schedule 系列工具。
 - **Shell 工具按平台切换**：Windows 下启用 `tool-pwsh`、关闭 `tool-bash`；其他平台相反。
 - **插件管理器工具默认关闭**。
 - 预设的提示词由各插件自带，本文件只做能力声明，不写提示词正文 ——
   因此不会出现「描述了某个本预设没有的能力」这种情况。
+
+## 本地修改记录（适配 DSH 0.2.2-rc.3）
+
+本副本在上游 v1.0.0 基础上做了三处修改，因为上游写法在 0.2.2-rc.3 上会激活失败：
+
+1. **`tool-subagent` 配置字段更新**
+   - 移除 `modelSelectionSettings: true`（该字段已不存在）
+   - 移除两个工具实例上的 `toolFilter.deny`（新版会直接抛
+     `tool-subagent: toolFilter is no longer supported`）
+   - 改用当前版本的 `modelSelection: true` + `modelDiscovery: true`
+2. **补回内置 `dsh-doc` skill 的目录**
+   上游没有声明 `customSkillDirs`，而 `standard` 预设是靠这一行挂载内置 skill 的。
+   本 bundle 位于安装目录之外，`baseUrl` 相对解析够不到安装目录的 `node_modules`，
+   因此改为探测 `DSH_INSTALL_DIR` 与 `process.resourcesPath` 两个已知位置，
+   只贡献实际存在的目录；位置变化时降级为「没有额外 skill 根」，而不是整个预设激活失败。
+3. **补上 `tool-office`**
+   与 `standard` 对齐，避免「编码模式」缺少 Office 工具。
+
+`toolFilter` 移除后，子 Agent 不再被限制创建定时任务。新版把子 Agent 的能力交给
+「子 Agent 使用哪个预设」来管理，`toolFilter` 已无对应机制。

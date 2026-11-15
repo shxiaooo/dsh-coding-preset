@@ -51,6 +51,28 @@
             name: '@deepseek-ai/dsh-tool-schedule'
           - id: skill-filesystem
             name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              # The shipped `standard` preset resolves the bundled skill root
+              # from its own bundle location (web-app), which sits inside the
+              # installation. This bundle lives outside it, so a baseUrl-relative
+              # resolve cannot reach the installation's node_modules and the
+              # bundled `dsh-doc` skill would silently disappear. Probe the known
+              # installation locations instead and contribute only the ones that
+              # exist, so a relocated installation degrades to no extra root
+              # rather than failing the whole preset.
+              customSkillDirs: !!js |
+                (() => {
+                  const fs = process.getBuiltinModule('node:fs')
+                  const path = process.getBuiltinModule('node:path')
+                  const roots = []
+                  if (process.env.DSH_INSTALL_DIR) {
+                    roots.push(path.join(process.env.DSH_INSTALL_DIR, 'node_modules', '@deepseek-ai', 'dsh-agent-preset', 'skills'))
+                  }
+                  if (process.resourcesPath) {
+                    roots.push(path.join(process.resourcesPath, 'app.asar', 'dsh', 'node_modules', '@deepseek-ai', 'dsh-agent-preset', 'skills'))
+                  }
+                  return roots.filter((dir) => fs.existsSync(dir))
+                })()
           - id: tool-skill
             name: '@deepseek-ai/dsh-tool-skill'
           - id: planning
@@ -100,24 +122,13 @@
                 config:
                   provider: spawn
                   toolName: subagent
-                  modelSelectionSettings: true
-                  toolFilter:
-                    deny:
-                      - schedule_create
-                      - schedule_delete
-                      - schedule_list
-                      - schedule_update
+                  modelSelection: true
+                  modelDiscovery: true
               - id: tool-subagent-fork
                 name: '@deepseek-ai/dsh-tool-subagent'
                 config:
                   provider: fork
                   toolName: subagent_fork
-                  toolFilter:
-                    deny:
-                      - schedule_create
-                      - schedule_delete
-                      - schedule_list
-                      - schedule_update
           - id: tool-ask-user
             name: '@deepseek-ai/dsh-tool-ask-user'
           - id: tool-todo
@@ -131,6 +142,8 @@
               searchTimeoutMs: 60000
           - id: present
             name: '@deepseek-ai/dsh-tool-present'
+          - id: tool-office
+            name: '@deepseek-ai/dsh-tool-office'
           - id: tool-plugin-manager
             name: '@deepseek-ai/dsh-plugin-manager/tools'
             disabled: true
